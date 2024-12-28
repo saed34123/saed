@@ -1,0 +1,180 @@
+# تحديث ملف register.html لتصحيح مسار الإرسال
+register_html_content = '''<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>إنشاء حساب جديد</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+                        url('https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3') center/cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            width: 90%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+        .form-title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+            box-sizing: border-box;
+        }
+        input:focus {
+            border-color: #4CAF50;
+            outline: none;
+            box-shadow: 0 0 5px rgba(74, 175, 80, 0.2);
+        }
+        .submit-btn {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+        }
+        .submit-btn:hover {
+            background: #45a049;
+        }
+        .error-message {
+            color: #ff0000;
+            margin-top: 10px;
+            text-align: center;
+            padding: 10px;
+            background-color: rgba(255, 0, 0, 0.1);
+            border-radius: 5px;
+            display: none;
+        }
+        .success-message {
+            color: #4CAF50;
+            margin-top: 10px;
+            text-align: center;
+            padding: 10px;
+            background-color: rgba(74, 175, 80, 0.1);
+            border-radius: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="form-title">إنشاء حساب جديد</h2>
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+        <form id="registerForm" action="./register_process.php" method="POST" onsubmit="return validateForm()">
+            <div class="form-group">
+                <label for="username">اسم المستخدم</label>
+                <input type="text" id="username" name="username" required minlength="3">
+            </div>
+            <div class="form-group">
+                <label for="email">البريد الإلكتروني</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">رقم الهاتف</label>
+                <input type="tel" id="phone" name="phone" required pattern="[0-9]{10,}">
+            </div>
+            <div class="form-group">
+                <label for="password">كلمة المرور</label>
+                <input type="password" id="password" name="password" required minlength="6">
+            </div>
+            <button type="submit" class="submit-btn">إنشاء حساب</button>
+        </form>
+    </div>
+
+    <script>
+    function validateForm() {
+        const form = document.getElementById('registerForm');
+        const errorDiv = document.getElementById('errorMessage');
+        const successDiv = document.getElementById('successMessage');
+        
+        // إخفاء رسائل الخطأ والنجاح السابقة
+        errorDiv.style.display = 'none';
+        successDiv.style.display = 'none';
+        
+        // التحقق من صحة البريد الإلكتروني
+        const email = document.getElementById('email').value;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            errorDiv.textContent = 'يرجى إدخال بريد إلكتروني صحيح';
+            errorDiv.style.display = 'block';
+            return false;
+        }
+        
+        // التحقق من طول كلمة المرور
+        const password = document.getElementById('password').value;
+        if (password.length < 6) {
+            errorDiv.textContent = 'يجب أن تكون كلمة المرور 6 أحرف على الأقل';
+            errorDiv.style.display = 'block';
+            return false;
+        }
+        
+        // التحقق من رقم الهاتف
+        const phone = document.getElementById('phone').value;
+        if (!/^\d{10,}$/.test(phone)) {
+            errorDiv.textContent = 'يرجى إدخال رقم هاتف صحيح (10 أرقام على الأقل)';
+            errorDiv.style.display = 'block';
+            return false;
+        }
+        
+        return true;
+    }
+    
+    // التحقق من وجود رسائل خطأ أو نجاح من PHP
+    window.onload = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        const success = urlParams.get('success');
+        
+        if (error) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = decodeURIComponent(error);
+            errorDiv.style.display = 'block';
+        }
+        
+        if (success) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = decodeURIComponent(success);
+            successDiv.style.display = 'block';
+        }
+    }
+    </script>
+</body>
+</html>'''
+
+with open('registration_system/register.html', 'w', encoding='utf-8') as f:
+    f.write(register_html_content)
+
+print("تم تحديث ملف register.html مع تصحيح مسار الإرسال وإضافة التحقق من صحة البيانات")

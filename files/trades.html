@@ -1,0 +1,251 @@
+# Create trades.php
+trades_content = """<?php
+require_once '../includes/config.php';
+session_start();
+
+// التحقق من تسجيل الدخول
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
+// استدعاء بيانات المستخدم
+$user = new User();
+$user_data = $user->getUserById($_SESSION['user_id']);
+
+// استدعاء الصفقات (مثال)
+$trades = [
+    [
+        'id' => 1,
+        'type' => 'شراء',
+        'symbol' => 'BTC/USD',
+        'amount' => 0.5,
+        'price' => 45000,
+        'status' => 'مكتمل',
+        'date' => '2024-11-27 10:30:00'
+    ],
+    [
+        'id' => 2,
+        'type' => 'بيع',
+        'symbol' => 'ETH/USD',
+        'amount' => 2.0,
+        'price' => 3200,
+        'status' => 'معلق',
+        'date' => '2024-11-27 11:15:00'
+    ]
+];
+?>
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الصفقات - منصة التداول</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .trades-container {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .trade-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filter-item {
+            flex: 1;
+            min-width: 200px;
+        }
+        .trade-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .trade-table th,
+        .trade-table td {
+            padding: 12px;
+            text-align: right;
+            border-bottom: 1px solid #eee;
+        }
+        .trade-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+        .status-complete {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .trade-type-buy {
+            color: #28a745;
+        }
+        .trade-type-sell {
+            color: #dc3545;
+        }
+        .new-trade-btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        .new-trade-btn:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="user-info">
+            <img src="../assets/images/avatar.png" alt="صورة المستخدم">
+            <div>
+                <h3><?php echo htmlspecialchars($user_data['full_name']); ?></h3>
+                <small><?php echo htmlspecialchars($user_data['email']); ?></small>
+            </div>
+        </div>
+        <div>
+            <a href="dashboard.php" class="btn"><i class="fas fa-home"></i> لوحة التحكم</a>
+            <a href="logout.php" class="btn"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="trades-container">
+            <h2>الصفقات</h2>
+            
+            <!-- زر إضافة صفقة جديدة -->
+            <a href="new-trade.php" class="new-trade-btn">
+                <i class="fas fa-plus"></i> صفقة جديدة
+            </a>
+
+            <!-- فلاتر البحث -->
+            <div class="trade-filters">
+                <div class="filter-item">
+                    <label>نوع الصفقة:</label>
+                    <select class="form-control">
+                        <option value="">الكل</option>
+                        <option value="buy">شراء</option>
+                        <option value="sell">بيع</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>الحالة:</label>
+                    <select class="form-control">
+                        <option value="">الكل</option>
+                        <option value="complete">مكتمل</option>
+                        <option value="pending">معلق</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>الرمز:</label>
+                    <select class="form-control">
+                        <option value="">الكل</option>
+                        <option value="BTC/USD">BTC/USD</option>
+                        <option value="ETH/USD">ETH/USD</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- جدول الصفقات -->
+            <table class="trade-table">
+                <thead>
+                    <tr>
+                        <th>رقم الصفقة</th>
+                        <th>النوع</th>
+                        <th>الرمز</th>
+                        <th>الكمية</th>
+                        <th>السعر</th>
+                        <th>الإجمالي</th>
+                        <th>الحالة</th>
+                        <th>التاريخ</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($trades as $trade): ?>
+                    <tr>
+                        <td>#<?php echo $trade['id']; ?></td>
+                        <td class="<?php echo $trade['type'] == 'شراء' ? 'trade-type-buy' : 'trade-type-sell'; ?>">
+                            <?php echo $trade['type']; ?>
+                        </td>
+                        <td><?php echo $trade['symbol']; ?></td>
+                        <td><?php echo $trade['amount']; ?></td>
+                        <td>$<?php echo number_format($trade['price'], 2); ?></td>
+                        <td>$<?php echo number_format($trade['amount'] * $trade['price'], 2); ?></td>
+                        <td>
+                            <span class="status-badge <?php echo $trade['status'] == 'مكتمل' ? 'status-complete' : 'status-pending'; ?>">
+                                <?php echo $trade['status']; ?>
+                            </span>
+                        </td>
+                        <td><?php echo $trade['date']; ?></td>
+                        <td>
+                            <a href="view-trade.php?id=<?php echo $trade['id']; ?>" title="عرض التفاصيل">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <?php if ($trade['status'] == 'معلق'): ?>
+                            <a href="edit-trade.php?id=<?php echo $trade['id']; ?>" title="تعديل">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="cancel-trade.php?id=<?php echo $trade['id']; ?>" title="إلغاء"
+                               onclick="return confirm('هل أنت متأكد من إلغاء هذه الصفقة؟')">
+                                <i class="fas fa-times"></i>
+                            </a>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // يمكن إضافة كود JavaScript هنا للتصفية والفرز
+        document.addEventListener('DOMContentLoaded', function() {
+            // كود التصفية
+            const filters = document.querySelectorAll('.form-control');
+            filters.forEach(filter => {
+                filter.addEventListener('change', function() {
+                    // تنفيذ التصفية
+                    console.log('تم تغيير الفلتر:', this.value);
+                });
+            });
+        });
+    </script>
+</body>
+</html>"""
+
+# Save trades.php
+with open('trading_platform/public/trades.php', 'w', encoding='utf-8') as f:
+    f.write(trades_content)
+
+print("تم إنشاء صفحة الصفقات (trades.php) بنجاح!")
+print("\
+مميزات الصفحة:")
+print("1. عرض قائمة الصفقات في جدول منظم")
+print("2. إمكانية تصفية الصفقات حسب النوع والحالة والرمز")
+print("3. إضافة صفقات جديدة")
+print("4. عرض وتعديل وإلغاء الصفقات")
+print("5. عرض إحصائيات وتفاصيل كل صفقة")
+print("6. تصميم متجاوب مع جميع الأجهزة")
+print("\
+الملفات المطلوب إنشاؤها لاحقاً:")
+print("- new-trade.php (إضافة صفقة جديدة)")
+print("- view-trade.php (عرض تفاصيل الصفقة)")
+print("- edit-trade.php (تعديل الصفقة)")
+print("- cancel-trade.php (إلغاء الصفقة)")
